@@ -1,48 +1,43 @@
-## Micronaut 4.8.2 Documentation
-
-- [User Guide](https://docs.micronaut.io/4.8.2/guide/index.html)
-- [API Reference](https://docs.micronaut.io/4.8.2/api/index.html)
-- [Configuration Reference](https://docs.micronaut.io/4.8.2/guide/configurationreference.html)
-- [Micronaut Guides](https://guides.micronaut.io/index.html)
----
-
-- [Micronaut Gradle Plugin documentation](https://micronaut-projects.github.io/micronaut-gradle-plugin/latest/)
-- [GraalVM Gradle Plugin documentation](https://graalvm.github.io/native-build-tools/latest/gradle-plugin.html)
-- [Shadow Gradle Plugin](https://gradleup.com/shadow/)
-## Feature hibernate-validator documentation
-
-- [Micronaut Hibernate Validator documentation](https://micronaut-projects.github.io/micronaut-hibernate-validator/latest/guide/index.html)
+## Strange `@TypeDef` Behavior
 
 
-## Feature test-resources documentation
-
-- [Micronaut Test Resources documentation](https://micronaut-projects.github.io/micronaut-test-resources/latest/guide/)
 
 
-## Feature micronaut-aot documentation
+```java
+package com.example.model;
 
-- [Micronaut AOT documentation](https://micronaut-projects.github.io/micronaut-aot/latest/guide/)
+import io.micronaut.core.annotation.Nullable;
+import io.micronaut.data.annotation.*;
+import io.micronaut.data.model.DataType;
+import jakarta.persistence.Column;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import net.postgis.jdbc.PGgeometry;
+import net.postgis.jdbc.geometry.Point;
 
+@Data
+@MappedEntity
+@NoArgsConstructor
+public class MyEntity {
 
-## Feature serialization-jackson documentation
+    @Id
+    @GeneratedValue(GeneratedValue.Type.SEQUENCE)
+    Long id;
 
-- [Micronaut Serialization Jackson Core documentation](https://micronaut-projects.github.io/micronaut-serialization/latest/guide/)
+    // This Doesn't Work, and causes compile failure...
+    @Nullable
+    @Column(name="gis_point")
+    @TypeDef(type = DataType.OBJECT)
+    @MappedProperty(converter = PointAttributeConverter.class, type = DataType.OBJECT,
+            converterPersistedType = PGgeometry.class)
+    Point point;
 
-
-## Feature lombok documentation
-
-- [Micronaut Project Lombok documentation](https://docs.micronaut.io/latest/guide/index.html#lombok)
-
-- [https://projectlombok.org/features/all](https://projectlombok.org/features/all)
-
-
-## Feature data-jdbc documentation
-
-- [Micronaut Data JDBC documentation](https://micronaut-projects.github.io/micronaut-data/latest/guide/index.html#jdbc)
-
-
-## Feature jdbc-hikari documentation
-
-- [Micronaut Hikari JDBC Connection Pool documentation](https://micronaut-projects.github.io/micronaut-sql/latest/guide/index.html#jdbc)
-
-
+    // This Works    
+    @Nullable
+    @Column(name="gis_point")
+    @TypeDef(type = DataType.OBJECT)
+    @MappedProperty(converter = ProxyPointAttributeConverter.class, type = DataType.OBJECT,
+            converterPersistedType = PGgeometry.class)
+    ProxyPoint point;
+}
+```
